@@ -20,16 +20,16 @@ func filterOutWhitespaces(arr []string) []string {
 }
 
 type parsedDate struct {
-	day    int
-	month  int
 	year   int
+	month  int
+	day    int
 	hour   int
 	minute int
 	second int
 }
 
 func newParsedDate() parsedDate {
-	return parsedDate{0, 0, 0, 0, 0, 0}
+	return parsedDate{0, 1, 1, 0, 0, 0}
 }
 
 func (pd *parsedDate) SetYear(year int) {
@@ -43,6 +43,7 @@ func (pd *parsedDate) SetDay(day int) {
 }
 
 func parseDateString(ds []int) parsedDate {
+	fmt.Println(ds)
 	pd := newParsedDate()
 	dsLen := len(ds)
 	switch dsLen {
@@ -105,7 +106,7 @@ func (ts Timestamp) fromDateString(ds string) (TimestampResponse, error) {
 		convertedElements = append(convertedElements, int(converted))
 	}
 	pd := parseDateString(convertedElements)
-	loc, _ := time.LoadLocation("Local")
+	loc, _ := time.LoadLocation("UTC")
 	date := time.Date(pd.year, time.Month(pd.month), pd.day, pd.hour, pd.minute, pd.second, 0, loc)
 	return newTimestampResponse(date.Unix()), nil
 
@@ -124,14 +125,16 @@ func (ts Timestamp) Parse(ds string) (TimestampResponse, error) {
 		if err != nil {
 			return TimestampResponse{}, DateError{}
 		}
-		return ts.fromUnix(converted), nil
+		return ts.fromUnix(converted / 1000), nil
 	}
 	return ts.fromDateString(ds)
 
 }
 
 func newTimestampResponse(u int64) TimestampResponse {
-	utc := time.Unix(u, 0).Format(http.TimeFormat)
+
+	loc, _ := time.LoadLocation("UTC")
+	utc := time.Unix(u, 0).In(loc).Format(http.TimeFormat)
 	return TimestampResponse{u, utc}
 
 }
