@@ -29,9 +29,12 @@ func handleTimestamp(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Fprintf(rw, "Error : %s", err)
 	}
-	encoder := json.NewEncoder(rw)
-	encoder.Encode(&timestamp)
-	fmt.Fprint(rw)
+	jsonResponse, _ := json.Marshal(&timestamp)
+	//encoder := json.NewEncoder(rw)
+	//encoder.Encode(&timestamp)
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	rw.Write(jsonResponse)
 
 }
 
