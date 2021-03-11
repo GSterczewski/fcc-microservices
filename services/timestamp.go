@@ -108,7 +108,7 @@ func (ts Timestamp) fromDateString(ds string) (TimestampResponse, error) {
 	pd := parseDateString(convertedElements)
 	loc, _ := time.LoadLocation("UTC")
 	date := time.Date(pd.year, time.Month(pd.month), pd.day, pd.hour, pd.minute, pd.second, 0, loc)
-	return newTimestampResponse(date.Unix()), nil
+	return newTimestampResponse(date.Unix() * 1000), nil
 
 }
 
@@ -132,10 +132,10 @@ func (ts Timestamp) Parse(ds string) (TimestampResponse, error) {
 }
 
 func newTimestampResponse(u int64) TimestampResponse {
-
+	miliseconds := u * 1000
 	loc, _ := time.LoadLocation("UTC")
 	utc := time.Unix(u, 0).In(loc).Format(http.TimeFormat)
-	return TimestampResponse{u, utc}
+	return TimestampResponse{miliseconds, utc}
 
 }
 

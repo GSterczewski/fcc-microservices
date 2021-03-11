@@ -1,18 +1,18 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/fcc-microservices/config"
+	"github.com/fcc-microservices/responder"
 	"github.com/fcc-microservices/router"
 	"github.com/fcc-microservices/services"
+	"github.com/fcc-microservices/static"
 )
-
-const port = 8080
-const apiPath = "/api"
 
 func getDateStringFromURI(req *http.Request, path string) string {
 	input := req.URL.Path[len(path):]
@@ -25,23 +25,29 @@ func getDateStringFromURI(req *http.Request, path string) string {
 }
 func handleTimestamp(rw http.ResponseWriter, req *http.Request) {
 	ts := services.Timestamp{}
-	timestamp, err := ts.Parse(getDateStringFromURI(req, "/api/timestamp/"))
+	responder := responder.NewResponder(rw)
+	timestamp, err := ts.Parse(getDateStringFromURI(req, config.TimestampServicePath))
 	if err != nil {
 		fmt.Fprintf(rw, "Error : %s", err)
 	}
-	jsonResponse, _ := json.Marshal(&timestamp)
-	//encoder := json.NewEncoder(rw)
-	//encoder.Encode(&timestamp)
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	rw.Write(jsonResponse)
+	responder.ServeJSON(&timestamp)
 
 }
 
+func handleHomePage(rw http.ResponseWriter, req *http.Request) {
+	responder := responder.NewResponder(rw)
+	wd, _ := os.Getwd()
+
+	timestampServiceLink := static.Link{Name: "Timestamp service", Href: config.TimestampServicePath}
+	links := []static.Link{timestampServiceLink}
+	pd := static.PageData{Title: config.PageTitle, Links: links}
+	responder.ServeHTML(fmt.Sprintf("%s/static/layout.html", wd), pd)
+}
 func main() {
-	router := router.NewRouter(apiPath)
-	router.Register("timestamp/", handleTimestamp)
+	router := router.NewRouter()
+	router.Register(config.TimestampServicePath, handleTimestamp)
+	router.Register(config.HomePath, handleHomePage)
 	router.Init()
-	fmt.Printf("FCC-MICROSERVICES run on port %d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	fmt.Printf("FCC-MICROSERVICES run on port %d\n", config.Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
