@@ -34,18 +34,27 @@ func handleTimestamp(rw http.ResponseWriter, req *http.Request) {
 
 }
 
+func handleWhoami(rw http.ResponseWriter, req *http.Request) {
+	responder := responder.NewResponder(rw)
+	whoami := services.NewWhoami(req)
+	response := whoami.Parse()
+	responder.ServeJSON(&response)
+}
+
 func handleHomePage(rw http.ResponseWriter, req *http.Request) {
 	responder := responder.NewResponder(rw)
 	wd, _ := os.Getwd()
 
 	timestampServiceLink := static.Link{Name: "Timestamp service", Href: config.TimestampServicePath}
-	links := []static.Link{timestampServiceLink}
+	whoamiServiceLink := static.Link{Name: "Whoami service", Href: config.WhoamiServicePath}
+	links := []static.Link{timestampServiceLink, whoamiServiceLink}
 	pd := static.PageData{Title: config.PageTitle, Links: links}
 	responder.ServeHTML(fmt.Sprintf("%s/static/layout.html", wd), pd)
 }
 func main() {
 	router := router.NewRouter()
 	router.Register(config.TimestampServicePath, handleTimestamp)
+	router.Register(config.WhoamiServicePath, handleWhoami)
 	router.Register(config.HomePath, handleHomePage)
 	router.Init()
 	fmt.Printf("FCC-MICROSERVICES run on port %d\n", config.Port)

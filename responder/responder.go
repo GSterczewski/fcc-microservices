@@ -27,6 +27,7 @@ func (s Responder) ServeJSON(payload interface{}) {
 
 	json, err := json.Marshal(payload)
 	if err != nil {
+		log.Println(err)
 		s.InternalServerError("")
 		return
 	}
